@@ -2,8 +2,8 @@
 Servo Motor;
 int leftLdr = 0;
 int rightLdr = 0;
-int angle_mapped = 0;
-int angle = 0;
+int angle_mapped = 90;
+int angle = 90;
 
 int leftOffset = 0;
 int rightOffset = 0;
@@ -14,14 +14,14 @@ int printserial = 100;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   Motor.attach(5);
 
   leftOffset = analogRead(A0);
   rightOffset = analogRead(A15);
 
-  Motor.write(0);
+  Motor.write(90);
 
 }
 
@@ -49,11 +49,6 @@ void loop() {
     printserial--;
   } else {
     printserial = 100;
-    Serial.print("Left: ");
-    Serial.println(leftLdrReal);
-    Serial.print("Right: ");
-    Serial.println(rightLdrReal);
-    Serial.print("Angle: ");
     Serial.println(angle_mapped);
   }
 
