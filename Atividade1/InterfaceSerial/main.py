@@ -1,8 +1,18 @@
 import serial  # necessário para importar a biblioteca pyserial
+import numpy as np
+import matplotlib.pyplot as plt
 
 # abre a primeira porta disponível
 ser = serial.Serial(port='COM7',baudrate=115200)
+plt.axis([0, 10, 0, 1])
+raio = 50;
 while 1:
+    for i in range(10):
+        y = np.random.random()
+        plt.scatter(i, y)
+        plt.pause(0.05)
+
+    plt.show()
 
 
     # escreve a string teste nesta porta

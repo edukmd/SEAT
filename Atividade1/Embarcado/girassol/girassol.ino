@@ -33,14 +33,18 @@ void loop() {
   leftLdrReal = leftLdr - leftOffset;
   rightLdrReal = rightLdr - rightOffset;
 
-  if (leftLdrReal > 100 && leftLdrReal > rightLdrReal) {
+  if (leftLdrReal > 20 && leftLdrReal > rightLdrReal) {
     if (angle < 180) {
       angle++;
     }
-  } else if (rightLdrReal > 100 && rightLdrReal > leftLdrReal) {
+  } else if (rightLdrReal > 20 && rightLdrReal > leftLdrReal) {
     if (angle) {
       angle--;
     }
+  } else {
+
+    angle = 90;
+
   }
   angle_mapped = angle;
   Motor.write(angle_mapped);
