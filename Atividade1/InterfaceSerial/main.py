@@ -27,7 +27,6 @@ line_thickness = 2
 height = 600
 width = 600
 image = np.ones((height, width)) * 255
-img1 = cv2.line(image, start_point, end_point, (0, 255, 0), thickness=line_thickness)
 
 #cv2.imshow('Single Channel Window', img1)
 #cv2.waitKey(0)
@@ -53,13 +52,5 @@ while 1:
     if cv2.waitKey(1) == ord('q'):
         # press q to terminate the loop
         cv2.destroyAllWindows()
+        ser.close()
         break
-    #cv2.destroyAllWindows()
-    #cv2.waitKey(0)
-    #
-
-    # le a linha enviada pelo disposito remoto como resposta a string Teste
-
-
-    # fecha a porta
-ser.close()
