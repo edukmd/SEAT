@@ -1,5 +1,7 @@
 #include <Servo.h>
 Servo Motor;
+
+#define VALOR_DEBOUNCE 10
 int leftLdr = 0;
 int rightLdr = 0;
 int angle_mapped = 90;
@@ -11,6 +13,7 @@ int rightOffset = 0;
 int leftLdrReal = 0;
 int rightLdrReal = 0;
 int printserial = 100;
+int debounce_angle = 5;
 
 void setup() {
   // put your setup code here, to run once:
@@ -32,20 +35,29 @@ void loop() {
 
   leftLdrReal = leftLdr - leftOffset;
   rightLdrReal = rightLdr - rightOffset;
+  if (!debounce_angle) {
+    debounce_angle = VALOR_DEBOUNCE;
+    if (leftLdrReal > 20 && leftLdrReal > rightLdrReal) {
+      if (angle < 180) {
+        angle++;
+      }
+    } else if (rightLdrReal > 20 && rightLdrReal > leftLdrReal) {
+      if (angle) {
+        angle--;
+      }
+    } else {
+      if (angle > 90) {
+        angle--;
+      } else if ( angle < 90) {
+        angle++;
+      }
 
-  if (leftLdrReal > 20 && leftLdrReal > rightLdrReal) {
-    if (angle < 180) {
-      angle++;
     }
-  } else if (rightLdrReal > 20 && rightLdrReal > leftLdrReal) {
-    if (angle) {
-      angle--;
-    }
+
   } else {
-
-    angle = 90;
-
+    debounce_angle--;
   }
+
   angle_mapped = angle;
   Motor.write(angle_mapped);
 
@@ -56,5 +68,4 @@ void loop() {
     Serial.println(angle_mapped);
   }
 
-  delay(5);
 }
