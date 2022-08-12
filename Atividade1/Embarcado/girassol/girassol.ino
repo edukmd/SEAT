@@ -4,6 +4,9 @@ Servo Motor;
 //DEFINES
 #define VALOR_DEBOUNCE 10
 #define CALIBRATION_DEBOUNCE_CYCLE 1000
+#define ESQUERDA 0
+#define DIREITA 172
+#define CENTRO 84
 
 enum STATE {
   CALIBRATION_LEFT_LDR,
@@ -59,7 +62,7 @@ void setup() {
   rightOffset = analogRead(A15);
 
   //Initial position of motor
-  Motor.write(90);
+  Motor.write(ESQUERDA);
 
 }
 
@@ -74,9 +77,10 @@ void loop() {
           calibrationDebounce--;
         } else {
           machineState = CALIBRATION_RIGHT_LDR;
-          leftLdrMaxValue = leftLdr;
-          rightLdrMinValue = rightLdr;
+          leftLdrMaxValue = leftLdr - leftOffset;
+          rightLdrMinValue = rightLdr - rightOffset;
           calibrationDebounce = CALIBRATION_DEBOUNCE_CYCLE;
+          Motor.write(DIREITA);
         }
       } else {
         calibrationDebounce = CALIBRATION_DEBOUNCE_CYCLE;
@@ -90,9 +94,10 @@ void loop() {
         if (calibrationDebounce) {
           calibrationDebounce--;
         } else {
-          machineState = CHECK_CALIBRATION;
-          leftLdrMinValue = leftLdr;
-          rightLdrMaxValue = rightLdr;
+          machineState = NORMAL_OPERATION;
+          leftLdrMinValue = leftLdr  - leftOffset;
+          rightLdrMaxValue = rightLdr - rightOffset;
+          Motor.write(CENTRO);
         }
       } else {
         calibrationDebounce = CALIBRATION_DEBOUNCE_CYCLE;
@@ -104,8 +109,8 @@ void loop() {
       loopingControl();
       break;
 
-      
-      case CHECK_CALIBRATION:
+
+    case CHECK_CALIBRATION:
       Serial.print("Direita maximo: ");
       Serial.println(rightLdrMaxValue);
       Serial.print("Direita minimo: ");
@@ -135,17 +140,18 @@ void setLdrRealValues(void) {
 int getMotorAngle(void) {
   static int angleMotor = angle;
   if (leftLdrReal > 20 && leftLdrReal > rightLdrReal) {
-    if (angleMotor < 180) {
-      angleMotor++;
-    }
-  } else if (rightLdrReal > 20 && rightLdrReal > leftLdrReal) {
     if (angle) {
       angleMotor--;
     }
+  } else if (rightLdrReal > 20 && rightLdrReal > leftLdrReal) {
+
+    if (angleMotor < DIREITA) {
+      angleMotor++;
+    }
   } else {
-    if (angleMotor > 90) {
+    if (angleMotor > CENTRO) {
       angleMotor--;
-    } else if ( angleMotor < 90) {
+    } else if ( angleMotor < CENTRO) {
       angleMotor++;
     }
 
@@ -180,8 +186,19 @@ void loopingControl(void) {
   if (printserial) {
     printserial--;
   } else {
-    printserial = 100;
-    Serial.println(angle);
+    printserial = 500;
+    //Serial.println(angle);
+    Serial.print("Direita maximo: ");
+    Serial.println(rightLdrMaxValue);
+    Serial.print("Direita minimo: ");
+    Serial.println(rightLdrMinValue);
+    Serial.println("-----");
+    Serial.print("Esquerda maximo: ");
+    Serial.println(leftLdrMaxValue);
+    Serial.print("Esquerda maximo: ");
+    Serial.println(leftLdrMinValue);
+    Serial.println("-----");
+    Serial.println(" ");
   }
 
 

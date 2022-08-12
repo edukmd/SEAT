@@ -37,9 +37,11 @@ while 1:
     if deuruim == 1:
         linhaLida = ser.readline()
         byte_message = linhaLida.decode()
-        angulo = int(byte_message)
-        angulo = angulo - 180
-        print(angulo)
+        try:
+            angulo = int(byte_message)
+            print(angulo)
+        except:
+            angulo = 84
 
 
     x = int(raio * math.cos(angulo * math.pi / 180))
