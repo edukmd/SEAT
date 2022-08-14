@@ -3,7 +3,7 @@ Servo Motor;
 
 //DEFINES
 #define VALOR_DEBOUNCE 10
-#define CALIBRATION_DEBOUNCE_CYCLE 1000
+#define CALIBRATION_DEBOUNCE_CYCLE 2000
 #define ESQUERDA 0
 #define DIREITA 172
 #define CENTRO 84
@@ -52,6 +52,7 @@ unsigned char machineState = CALIBRATION_LEFT_LDR;
 void setup() {
   // put your setup code here, to run once:
   //Configure baudrate
+  Serial.begin(115200);
 
 
   //Configure pinout for the motor
@@ -85,8 +86,14 @@ void loop() {
       } else {
         calibrationDebounce = CALIBRATION_DEBOUNCE_CYCLE;
       }
-      Serial.print("Esquerda: ");
-      Serial.println(leftLdr);
+      if (printserial) {
+        printserial--;
+      } else {
+        printserial = 500;
+        Serial.print("Esquerda: ");
+        Serial.println(leftLdr);
+      }
+
       break;
     case CALIBRATION_RIGHT_LDR:
       getLdrValues();
@@ -139,36 +146,49 @@ void setLdrRealValues(void) {
 
 int getMotorAngle(void) {
   static int angleMotor = angle;
-  static int angleRemappedLeft = 0;
+  int angleRemappedLeft = 0;
+  int angleRemappedRight = 0;
   int angle_limitLeft = 0;
-  angle_limitLeft = (int)((90*leftLdrReal/(leftLdrMaxValue-leftOffset)));
-  Serial.println(angle_limitLeft);
-  if (leftLdrReal > 20 && leftLdrReal > rightLdrReal) {
-    angleRemappedLeft = (leftLdrReal, leftOffset, leftLdrMaxValue, 0, 90);
+  angleRemappedLeft = (int)((90 * leftLdrReal / (leftLdrMaxValue - leftOffset)));
 
-
-    if (angle > angle_limitLeft) {
-      angleMotor--;
-    }else{
-      angleMotor++;
-    }
-  } else if (rightLdrReal > 20 && rightLdrReal > leftLdrReal) {
-
-    if (angleMotor < DIREITA) {
-      angleMotor++;
-    }
-  } else {
-    if (angleMotor > CENTRO) {
-      angleMotor--;
-    } else if ( angleMotor < CENTRO) {
-      angleMotor++;
-    }
-
+  angleRemappedLeft = -1*angleRemappedLeft;
+  if (angleRemappedLeft < -50){
+    angleRemappedLeft = -1 * angleRemappedLeft;
   }
 
-  return angleMotor;
+  angleRemappedRight = (int)((180 * rightLdrReal / (rightLdrMaxValue - rightOffset)));
 
+  if (printserial) {
+    printserial--;
+  } else {
+    printserial = 30;
+    Serial.print(angleRemappedLeft);
+    Serial.print(",");
+    Serial.print(angleRemappedRight);
+    Serial.print(",");
+    Serial.print(leftLdrReal);
+    Serial.print(",");
+    Serial.println(rightLdrReal);
+  }
+  if (leftLdrReal > rightLdrReal && leftLdrReal > 30) {
 
+    if (angleRemappedLeft < 0){
+      angleRemappedLeft = 0;
+    }else if(angleRemappedLeft > CENTRO){
+      angleRemappedLeft = CENTRO;
+    }
+    return angleRemappedLeft;
+  } else if (rightLdrReal > leftLdrReal && rightLdrReal > 30) {
+
+    if(angleRemappedRight < CENTRO){
+      angleRemappedRight = CENTRO;
+    }else if(angleRemappedRight > 180){
+      angleRemappedRight = 180;
+    }
+    return angleRemappedRight;
+  } else {
+    return CENTRO;
+  }
 
 }
 
@@ -190,14 +210,6 @@ void loopingControl(void) {
   }
 
   setMotorAngle(angle);
-
-
-  if (printserial) {
-    printserial--;
-  } else {
-    printserial = 500;
-    //Serial.println(angle);
-  }
 
 
 }
