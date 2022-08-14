@@ -124,7 +124,7 @@ void loop() {
   if (printserial) {
     printserial--;
   } else {
-    printserial = 100;
+    printserial = 50;
     Serial.print(angle);
     Serial.print(",");
     Serial.println(machineState);
@@ -152,7 +152,7 @@ int getMotorAngle(void) {
   int angle_limitLeft = 0;
 
   leftLdrMaxValue;
-  if (leftLdrReal > rightLdrReal + 20) {
+  if (leftLdrReal > rightLdrReal + 10) {
     angleRemappedLeft = (int)map(leftLdrReal, leftLdrMinValue, leftLdrMaxValue, 84, 0);
 
     if (angleRemappedLeft < 0) {
@@ -161,9 +161,21 @@ int getMotorAngle(void) {
       angleRemappedLeft = 84;
     }
 
-    return angleRemappedLeft;
+    if (angleMotor > angleRemappedLeft) {
+      angleMotor--;
+    } else {
+      angleMotor++;
+    }
 
-  } else if (rightLdrReal > leftLdrReal + 20) {
+    if (angleMotor < 0) {
+      angleMotor = 0;
+    } else if (angleMotor > 84) {
+      angleMotor = 84;
+    }
+
+    return angleMotor;
+
+  } else if (rightLdrReal > leftLdrReal + 10) {
 
     angleRemappedRight = (int)map(rightLdrReal, rightLdrMinValue, rightLdrMaxValue, 84, 172);
 
@@ -172,10 +184,27 @@ int getMotorAngle(void) {
     } else if (angleRemappedRight > 172) {
       angleRemappedRight = 172;
     }
-    return angleRemappedRight;
+
+    if (angleMotor < angleRemappedRight) {
+      angleMotor++;
+    } else {
+      angleMotor--;
+    }
+
+    if (angleMotor < 84) {
+      angleMotor = 84;
+    } else if (angleMotor > 172) {
+      angleMotor = 172;
+    }
+    return angleMotor;
 
   } else {
-    return CENTRO;
+    if(angle < 84){
+      angleMotor++;
+    }else if(angle > 84){
+      angleMotor--;
+    }
+    return angleMotor;
   }
 
 }
