@@ -52,7 +52,7 @@ unsigned char machineState = CALIBRATION_LEFT_LDR;
 void setup() {
   // put your setup code here, to run once:
   //Configure baudrate
-  Serial.begin(115200);
+
 
   //Configure pinout for the motor
   Motor.attach(5);
@@ -95,7 +95,7 @@ void loop() {
           calibrationDebounce--;
         } else {
           machineState = NORMAL_OPERATION;
-          leftLdrMinValue = leftLdr  - leftOffset;
+          leftLdrMinValue = leftLdr - leftOffset;
           rightLdrMaxValue = rightLdr - rightOffset;
           Motor.write(CENTRO);
         }
@@ -139,9 +139,18 @@ void setLdrRealValues(void) {
 
 int getMotorAngle(void) {
   static int angleMotor = angle;
+  static int angleRemappedLeft = 0;
+  int angle_limitLeft = 0;
+  angle_limitLeft = (int)((90*leftLdrReal/(leftLdrMaxValue-leftOffset)));
+  Serial.println(angle_limitLeft);
   if (leftLdrReal > 20 && leftLdrReal > rightLdrReal) {
-    if (angle) {
+    angleRemappedLeft = (leftLdrReal, leftOffset, leftLdrMaxValue, 0, 90);
+
+
+    if (angle > angle_limitLeft) {
       angleMotor--;
+    }else{
+      angleMotor++;
     }
   } else if (rightLdrReal > 20 && rightLdrReal > leftLdrReal) {
 
@@ -188,17 +197,6 @@ void loopingControl(void) {
   } else {
     printserial = 500;
     //Serial.println(angle);
-    Serial.print("Direita maximo: ");
-    Serial.println(rightLdrMaxValue);
-    Serial.print("Direita minimo: ");
-    Serial.println(rightLdrMinValue);
-    Serial.println("-----");
-    Serial.print("Esquerda maximo: ");
-    Serial.println(leftLdrMaxValue);
-    Serial.print("Esquerda maximo: ");
-    Serial.println(leftLdrMinValue);
-    Serial.println("-----");
-    Serial.println(" ");
   }
 
 
