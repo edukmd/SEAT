@@ -73,7 +73,7 @@ void loop() {
   switch (machineState) {
     case CALIBRATION_LEFT_LDR:
       getLdrValues();
-      if (leftLdr > 300) {
+      if (leftLdr > 500) {
         if (calibrationDebounce) {
           calibrationDebounce--;
         } else {
@@ -86,18 +86,11 @@ void loop() {
       } else {
         calibrationDebounce = CALIBRATION_DEBOUNCE_CYCLE;
       }
-      if (printserial) {
-        printserial--;
-      } else {
-        printserial = 500;
-        Serial.print("Esquerda: ");
-        Serial.println(leftLdr);
-      }
 
       break;
     case CALIBRATION_RIGHT_LDR:
       getLdrValues();
-      if (rightLdr > 300) {
+      if (rightLdr > 500) {
         if (calibrationDebounce) {
           calibrationDebounce--;
         } else {
@@ -109,8 +102,6 @@ void loop() {
       } else {
         calibrationDebounce = CALIBRATION_DEBOUNCE_CYCLE;
       }
-      Serial.print("Direita: ");
-      Serial.println(rightLdr);
       break;
     case NORMAL_OPERATION:
       loopingControl();
@@ -129,6 +120,16 @@ void loop() {
       Serial.println(leftLdrMinValue);
       break;
   }
+
+  if (printserial) {
+    printserial--;
+  } else {
+    printserial = 100;
+    Serial.print(angle);
+    Serial.print(",");
+    Serial.println(machineState);
+  }
+
 
 
 }
@@ -149,43 +150,30 @@ int getMotorAngle(void) {
   int angleRemappedLeft = 0;
   int angleRemappedRight = 0;
   int angle_limitLeft = 0;
-  angleRemappedLeft = (int)((90 * leftLdrReal / (leftLdrMaxValue - leftOffset)));
 
-  angleRemappedLeft = -1*angleRemappedLeft;
-  if (angleRemappedLeft < -50){
-    angleRemappedLeft = -1 * angleRemappedLeft;
-  }
+  leftLdrMaxValue;
+  if (leftLdrReal > rightLdrReal + 20) {
+    angleRemappedLeft = (int)map(leftLdrReal, leftLdrMinValue, leftLdrMaxValue, 84, 0);
 
-  angleRemappedRight = (int)((180 * rightLdrReal / (rightLdrMaxValue - rightOffset)));
-
-  if (printserial) {
-    printserial--;
-  } else {
-    printserial = 30;
-    Serial.print(angleRemappedLeft);
-    Serial.print(",");
-    Serial.print(angleRemappedRight);
-    Serial.print(",");
-    Serial.print(leftLdrReal);
-    Serial.print(",");
-    Serial.println(rightLdrReal);
-  }
-  if (leftLdrReal > rightLdrReal && leftLdrReal > 30) {
-
-    if (angleRemappedLeft < 0){
+    if (angleRemappedLeft < 0) {
       angleRemappedLeft = 0;
-    }else if(angleRemappedLeft > CENTRO){
-      angleRemappedLeft = CENTRO;
+    } else if (angleRemappedLeft > 84) {
+      angleRemappedLeft = 84;
     }
-    return angleRemappedLeft;
-  } else if (rightLdrReal > leftLdrReal && rightLdrReal > 30) {
 
-    if(angleRemappedRight < CENTRO){
-      angleRemappedRight = CENTRO;
-    }else if(angleRemappedRight > 180){
-      angleRemappedRight = 180;
+    return angleRemappedLeft;
+
+  } else if (rightLdrReal > leftLdrReal + 20) {
+
+    angleRemappedRight = (int)map(rightLdrReal, rightLdrMinValue, rightLdrMaxValue, 84, 172);
+
+    if (angleRemappedRight < 84) {
+      angleRemappedRight = 84;
+    } else if (angleRemappedRight > 172) {
+      angleRemappedRight = 172;
     }
     return angleRemappedRight;
+
   } else {
     return CENTRO;
   }
@@ -210,6 +198,5 @@ void loopingControl(void) {
   }
 
   setMotorAngle(angle);
-
 
 }
