@@ -11,6 +11,7 @@
 #define BUZZER          22
 #define LED_GREEN       23
 #define BUTTON_REGISTER 24
+#define TRAVA_MAGNETICA 25
 
 MFRC522 rfid(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
@@ -56,6 +57,7 @@ void setup() {
   pinMode(BUZZER, OUTPUT);
   pinMode(LED_GREEN, OUTPUT);
   pinMode(BUTTON_REGISTER, INPUT_PULLUP);
+  pinMode(TRAVA_MAGNETICA, OUTPUT);
 
 
   debounceCheck = 0;
@@ -98,8 +100,10 @@ void loop() {
       break;
     case ACCESS_CONTROL_GRANTED:
       accessState = CHECK_USER;
-
+      digitalWrite(TRAVA_MAGNETICA, HIGH);
       blinkLedBuzzer(100, 3);
+      delay(2700);
+      digitalWrite(TRAVA_MAGNETICA, LOW);
       break;
     case ACCESS_CONTROL_BLOCKED:
       accessState = CHECK_USER;
@@ -115,6 +119,7 @@ void loop() {
         Serial.println("Usuario registrado com sucesso!");
         accessState = CHECK_USER;
         blinkLedBuzzer(100, 2);
+        delay(1000);
 
       }
       break;
@@ -138,8 +143,8 @@ void printHex(unsigned char* data, unsigned char size_data) {
 }
 
 unsigned char checkUser(unsigned char *id) {
-  printHex(id, 4);
-  printHex(defaultUser.tagNUID, 4);
+  //printHex(id, 4);
+  //printHex(defaultUser.tagNUID, 4);
   if ((defaultUser.tagNUID[0] == id[0] && defaultUser.tagNUID[1] == id[1] && defaultUser.tagNUID[2] == id[2] && defaultUser.tagNUID[3] == id[3]) ||
   (User1.tagNUID[0] == id[0] && User1.tagNUID[1] == id[1] && User1.tagNUID[2] == id[2] && User1.tagNUID[3] == id[3])) {
     return 1;
