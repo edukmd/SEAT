@@ -48,7 +48,7 @@ void setup() {
     key.keyByte[i] = 0xFF;
   }
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial);
   SPI.begin();
 
@@ -183,6 +183,7 @@ void loop() {
       blinkLedBuzzer(500, 1);
       Serial.println("Aproxime o cartao para desbloquear a porta");
       break;
+      
     case REGISTER_USER:
       if (checkUser(rfid.uid.uidByte)) {
         Serial.println("Usuario ja registrado. Tente Outro!");
