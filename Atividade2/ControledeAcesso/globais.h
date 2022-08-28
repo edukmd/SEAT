@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+//#define __DEBUG__
+
 typedef struct {
   unsigned char *name;
   unsigned char tagNUID[4];
@@ -13,6 +15,9 @@ typedef struct {
 unsigned int debounceCheck;
 
 unsigned char accessState;
+unsigned char accessStateOld;
+
+unsigned char userSelected;
 
 #define BUFFER_SIZE 18
 unsigned char buffer[BUFFER_SIZE];
