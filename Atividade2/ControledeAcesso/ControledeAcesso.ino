@@ -18,6 +18,7 @@ MFRC522::MIFARE_Key key;
 MFRC522::StatusCode status;
 
 int i = 0;
+unsigned char size = sizeof(buffer);
 
 //FUNCTIONS
 void printHex(unsigned char* data, unsigned char size_data);
@@ -60,9 +61,11 @@ void setup() {
   pinMode(TRAVA_MAGNETICA, OUTPUT);
 
 
-  debounceCheck = 0;
+  debounceCheck = 100;
 
   accessState = CHECK_USER;
+
+  Serial.println("Aproxime o cartao para desbloquear a porta");
 
 
 
@@ -72,20 +75,40 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  unsigned char size = sizeof(buffer);
 
-  if (!digitalRead(BUTTON_REGISTER) && accessState == CHECK_USER) {
-    accessState = REGISTER_USER;
-    Serial.println("Aproxime o cartao para registrar novo usuario");
+  if (!debounceCheck) {
+    if (!digitalRead(BUTTON_REGISTER) && accessState != ACCESS_CONTROL_GRANTED && accessState != ACCESS_CONTROL_BLOCKED ) {
+
+      debounceCheck = 10;
+      switch (accessState) {
+        case CHECK_USER:
+
+          accessState = REGISTER_USER;
+          Serial.println("Aproxime o cartao para registrar novo usuario");
+          break;
+        case REGISTER_USER:
+          accessState = DELETE_USER;
+          Serial.println("Aproxime o cartao para deletar usuario existente");
+          break;
+        case DELETE_USER:
+          accessState = CHECK_USER;
+          Serial.println("Aproxime o cartao para desbloquear a porta");
+          break;
+      }
+
+    }
+  } else {
+    debounceCheck--;
   }
 
+
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
-  if ( ! rfid.PICC_IsNewCardPresent() && (accessState == CHECK_USER || accessState == REGISTER_USER)) {
+  if ( ! rfid.PICC_IsNewCardPresent() && (accessState == CHECK_USER || accessState == REGISTER_USER || accessState == DELETE_USER)) {
     return;
   }
 
   // Select one of the cards
-  if ( ! rfid.PICC_ReadCardSerial() && (accessState == CHECK_USER || accessState == REGISTER_USER)) {
+  if ( ! rfid.PICC_ReadCardSerial() && (accessState == CHECK_USER || accessState == REGISTER_USER || accessState == DELETE_USER)) {
     return;
   }
 
@@ -115,7 +138,7 @@ void loop() {
         accessState = ACCESS_CONTROL_GRANTED;
 
         status = rfid.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_B,
-                                          BLOCK_ADDR_READTRIES, &key, &(rfid.uid));
+                                       BLOCK_ADDR_READTRIES, &key, &(rfid.uid));
         if (status != MFRC522::STATUS_OK) {
           Serial.print(F("PCD_Authenticate() failed: "));
           Serial.println(rfid.GetStatusCodeName(status));
@@ -143,12 +166,14 @@ void loop() {
       // Stop encryption on PCD
       rfid.PCD_StopCrypto1();
       break;
+
     case ACCESS_CONTROL_GRANTED:
       accessState = CHECK_USER;
       digitalWrite(TRAVA_MAGNETICA, HIGH);
       blinkLedBuzzer(100, 3);
       delay(2700);
       digitalWrite(TRAVA_MAGNETICA, LOW);
+      Serial.println("Aproxime o cartao para desbloquear a porta");
 
 
       break;
@@ -156,6 +181,7 @@ void loop() {
       accessState = CHECK_USER;
 
       blinkLedBuzzer(500, 1);
+      Serial.println("Aproxime o cartao para desbloquear a porta");
       break;
     case REGISTER_USER:
       if (checkUser(rfid.uid.uidByte)) {
@@ -167,6 +193,29 @@ void loop() {
         accessState = CHECK_USER;
         blinkLedBuzzer(100, 2);
         delay(1000);
+        Serial.println("Aproxime o cartao para desbloquear a porta");
+
+      }
+      break;
+
+    case DELETE_USER:
+
+      if (checkUser(rfid.uid.uidByte) == 2) {
+        User1.tagNUID[0] = User1.tagNUID[1] = User1.tagNUID[2] = User1.tagNUID[3] = 0xFF;
+        Serial.println("Usuario deletado com sucesso");
+        blinkLedBuzzer(500, 1);
+
+        accessState = CHECK_USER;
+        Serial.println("Aproxime o cartao para desbloquear a porta");
+      } else if (checkUser(rfid.uid.uidByte) == 1) {
+        Serial.println("Usuario padrao nao pode ser deletado");
+        blinkLedBuzzer(100, 1);
+        delay(500);
+
+      } else {
+        Serial.println("Usuario nao existente");
+        blinkLedBuzzer(100, 1);
+        delay(500);
 
       }
       break;
@@ -192,10 +241,12 @@ void printHex(unsigned char* data, unsigned char size_data) {
 unsigned char checkUser(unsigned char *id) {
   //printHex(id, 4);
   //printHex(defaultUser.tagNUID, 4);
-  if ((defaultUser.tagNUID[0] == id[0] && defaultUser.tagNUID[1] == id[1] && defaultUser.tagNUID[2] == id[2] && defaultUser.tagNUID[3] == id[3]) ||
-      (User1.tagNUID[0] == id[0] && User1.tagNUID[1] == id[1] && User1.tagNUID[2] == id[2] && User1.tagNUID[3] == id[3])) {
+  if ((defaultUser.tagNUID[0] == id[0] && defaultUser.tagNUID[1] == id[1] && defaultUser.tagNUID[2] == id[2] && defaultUser.tagNUID[3] == id[3])) {
     return 1;
-  } else {
+  } else if ((User1.tagNUID[0] == id[0] && User1.tagNUID[1] == id[1] && User1.tagNUID[2] == id[2] && User1.tagNUID[3] == id[3])) {
+    return 2;
+  }
+  else {
     return 0;
   }
 }
