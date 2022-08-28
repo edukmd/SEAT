@@ -14,6 +14,13 @@ unsigned int debounceCheck;
 
 unsigned char accessState;
 
+#define BUFFER_SIZE 18
+unsigned char buffer[BUFFER_SIZE];
+unsigned accessOK;
+
+#define BLOCK_ADDR_READTRIES    1
+#define TRAILER_ADDR_READTRIES  2
+
 enum {
   CHECK_USER,
   ACCESS_CONTROL_GRANTED,

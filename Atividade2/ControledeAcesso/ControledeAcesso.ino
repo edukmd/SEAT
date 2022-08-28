@@ -1,6 +1,5 @@
 #include <SPI.h>
 #include <MFRC522.h>
-#include "FUNCOES.h"
 #include "globais.h"
 
 
@@ -16,6 +15,7 @@
 MFRC522 rfid(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
 MFRC522::MIFARE_Key key;
+MFRC522::StatusCode status;
 
 int i = 0;
 
@@ -66,10 +66,13 @@ void setup() {
 
 
 
+
+
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  unsigned char size = sizeof(buffer);
 
   if (!digitalRead(BUTTON_REGISTER) && accessState == CHECK_USER) {
     accessState = REGISTER_USER;
@@ -88,15 +91,57 @@ void loop() {
 
   switch (accessState) {
     case CHECK_USER:
+
+      //Autenticacao usando chave A
+      status = rfid.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A,
+                                     TRAILER_ADDR_READTRIES, &key, &(rfid.uid));
+      if (status != MFRC522::STATUS_OK) {
+        Serial.print(F("PCD_Authenticate() failed: "));
+        Serial.println(rfid.GetStatusCodeName(status));
+        return;
+      }
+      status = rfid.MIFARE_Read(BLOCK_ADDR_READTRIES, buffer, &size);
+      if (status != MFRC522::STATUS_OK) {
+        Serial.print(F("MIFARE_Read() failed: "));
+        Serial.println(rfid.GetStatusCodeName(status));
+      }
+
+      accessOK = buffer[0];
+      Serial.println(accessOK);
+
       if (checkUser(rfid.uid.uidByte)) {
-        Serial.println("Usuario registrado. Acesso garantido!");
+
+        Serial.println("Acesso garantido!");
         accessState = ACCESS_CONTROL_GRANTED;
 
+        status = rfid.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_B,
+                                          BLOCK_ADDR_READTRIES, &key, &(rfid.uid));
+        if (status != MFRC522::STATUS_OK) {
+          Serial.print(F("PCD_Authenticate() failed: "));
+          Serial.println(rfid.GetStatusCodeName(status));
+          return;
+        }
+        accessOK++;
+        buffer[0] = accessOK;
+
+        //Grava no bloco 1
+        status = rfid.MIFARE_Write(BLOCK_ADDR_READTRIES, buffer, 16);
+        if (status != MFRC522::STATUS_OK) {
+          Serial.print(F("MIFARE_Write() failed: "));
+          Serial.println(rfid.GetStatusCodeName(status));
+          return;
+        }
+
       } else {
-        Serial.println("Usuario nao registrado. Acesso bloqueado!");
+        Serial.println("Acesso bloqueado!");
         accessState = ACCESS_CONTROL_BLOCKED;
 
       }
+
+      // Halt PICC
+      rfid.PICC_HaltA();
+      // Stop encryption on PCD
+      rfid.PCD_StopCrypto1();
       break;
     case ACCESS_CONTROL_GRANTED:
       accessState = CHECK_USER;
@@ -104,6 +149,8 @@ void loop() {
       blinkLedBuzzer(100, 3);
       delay(2700);
       digitalWrite(TRAVA_MAGNETICA, LOW);
+
+
       break;
     case ACCESS_CONTROL_BLOCKED:
       accessState = CHECK_USER;
@@ -146,7 +193,7 @@ unsigned char checkUser(unsigned char *id) {
   //printHex(id, 4);
   //printHex(defaultUser.tagNUID, 4);
   if ((defaultUser.tagNUID[0] == id[0] && defaultUser.tagNUID[1] == id[1] && defaultUser.tagNUID[2] == id[2] && defaultUser.tagNUID[3] == id[3]) ||
-  (User1.tagNUID[0] == id[0] && User1.tagNUID[1] == id[1] && User1.tagNUID[2] == id[2] && User1.tagNUID[3] == id[3])) {
+      (User1.tagNUID[0] == id[0] && User1.tagNUID[1] == id[1] && User1.tagNUID[2] == id[2] && User1.tagNUID[3] == id[3])) {
     return 1;
   } else {
     return 0;
@@ -162,7 +209,7 @@ void blinkLedBuzzer(unsigned int msBlink, unsigned char times) {
   }
 }
 
-void registerUser(unsigned char *id){
+void registerUser(unsigned char *id) {
   User1.tagNUID[0] = id[0];
   User1.tagNUID[1] = id[1];
   User1.tagNUID[2] = id[2];
