@@ -14,7 +14,7 @@ fontScale = 1
 
 while(SerialPortOK == 0):
     try:
-        ser = serial.Serial(port='COM7', baudrate=115200)
+        ser = serial.Serial(port='COM5', baudrate=115200)
         SerialPortOK = 1
         print("Foi")
 
@@ -29,9 +29,12 @@ while 1:
     try:
         linhaLida = ser.readline()
         byte_message = linhaLida.decode()
-        splitMsg = byte_message.split(",")
-        accessState = int(splitMsg[0])
-        user = int(splitMsg[1])
+        try:
+            splitMsg = byte_message.split(",")
+            accessState = int(splitMsg[0])
+            user = int(splitMsg[1])
+        except:
+            print(" ")
 
         print(byte_message)
         SerialReadOK = 1

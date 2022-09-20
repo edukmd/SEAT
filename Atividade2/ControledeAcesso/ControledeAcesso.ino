@@ -87,7 +87,7 @@ void loop() {
   if (!debounceCheck) {
     if (!digitalRead(BUTTON_REGISTER) && accessState != ACCESS_CONTROL_GRANTED && accessState != ACCESS_CONTROL_BLOCKED ) {
 
-      debounceCheck = 10;
+      debounceCheck = 15;
       switch (accessState) {
         case CHECK_USER:
 

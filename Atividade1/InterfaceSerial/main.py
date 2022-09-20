@@ -6,7 +6,7 @@ import math
 # abre a primeira porta disponível
 SerialPortOK = 1
 try:
-    ser = serial.Serial(port='COM7', baudrate=115200)
+    ser = serial.Serial(port='COM5', baudrate=115200)
 except:
     SerialPortOK = 0
 
@@ -28,7 +28,6 @@ thickness = 2
 modo = 0
 updateimg = 0
 while 1:
-
     # escreve a string teste nesta porta
     if SerialPortOK == 1:
         updateimg = 0

@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-//#define __DEBUG__
+#define __DEBUG__
 
 typedef struct {
   unsigned char *name;
