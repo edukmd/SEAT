@@ -24,11 +24,15 @@ void setup() {
 
   flagCheckAngle = TIMER_CHECK_ANGLE;
 
-  StateMachine = CHECK_DISTANCE;
+  StateMachine = ROTATE_MOTOR;
 
   actualTime = millis();
 
   checkDistanceState = SEND_TRIGGER;
+
+  Serial.begin(9600);
+
+  stepsToReverseDirection = TOTAL_STEPS;
 
 }
 
@@ -43,11 +47,26 @@ void loop() {
         actualTime = millis();
         rotateMotor(sentido_motor, tipo);
         flagCheckAngle--;
+
+        Serial.println("teste");
+
+        if (stepsToReverseDirection) {
+          stepsToReverseDirection--;
+        } else {
+          stepsToReverseDirection = TOTAL_STEPS;
+
+          if (sentido_motor == HORARIO) {
+            sentido_motor = ANTI_HORARIO;
+          } else {
+            sentido_motor = HORARIO;
+          }
+
+        }
       }
 
       //Check HC-RCS04 sensor every TIMER_CONTROL * x time
       if (!flagCheckAngle) {
-        StateMachine = CHECK_DISTANCE;
+        //StateMachine = CHECK_DISTANCE;
 
         checkDistanceState = SEND_TRIGGER;
 
