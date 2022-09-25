@@ -2,6 +2,7 @@
 #include "globais.h"
 
 void rotateMotor(unsigned char sentido, unsigned char sequency);
+unsigned int sensorTime(void);
 
 void setup() {
   // put your setup code here, to run once:
@@ -24,7 +25,7 @@ void setup() {
 
   flagCheckAngle = TIMER_CHECK_ANGLE;
 
-  StateMachine = ROTATE_MOTOR;
+  StateMachine = CHECK_DISTANCE;
 
   actualTime = millis();
 
@@ -33,6 +34,10 @@ void setup() {
   Serial.begin(9600);
 
   stepsToReverseDirection = TOTAL_STEPS;
+
+  actualAngle = 0;
+  media_echo = 0;
+  totalPoints = 0;
 
 }
 
@@ -48,7 +53,18 @@ void loop() {
         rotateMotor(sentido_motor, tipo);
         flagCheckAngle--;
 
-        Serial.println("teste");
+        if (sentido_motor == HORARIO) {
+          actualAngle += ANGLE_PER_STEP * 2;
+        } else {
+          actualAngle -= ANGLE_PER_STEP * 2;
+        }
+
+        if(actualAngle < 0){
+          actualAngle = 0;
+        }else if(actualAngle > 180){
+          actualAngle = 180;
+        }
+
 
         if (stepsToReverseDirection) {
           stepsToReverseDirection--;
@@ -66,9 +82,7 @@ void loop() {
 
       //Check HC-RCS04 sensor every TIMER_CONTROL * x time
       if (!flagCheckAngle) {
-        //StateMachine = CHECK_DISTANCE;
-
-        checkDistanceState = SEND_TRIGGER;
+        StateMachine = CHECK_DISTANCE;
 
         flagCheckAngle = TIMER_CHECK_ANGLE;
       }
@@ -76,15 +90,21 @@ void loop() {
       break;
 
     case CHECK_DISTANCE:
-      switch (checkDistanceState) {
-        case SEND_TRIGGER:
-          break;
-        case WAIT_ECHO:
-          break;
-        case CALCULATE_DISTANCE:
-          break;
-      }
 
+      echoTime = sensorTime();
+      dist_eq1 = 0.0177 * echoTime - 0.6945;
+
+      StateMachine = SEND_DATA;
+
+      break;
+
+    case SEND_DATA:
+
+    Serial.print(actualAngle);
+    Serial.print(',');
+    Serial.println(dist_eq1);
+
+    StateMachine = ROTATE_MOTOR;
       break;
   }
 
@@ -306,6 +326,24 @@ void rotateMotor(unsigned char sentido, unsigned char sequency) {
 
       break;
   }
+}
 
+unsigned int sensorTime(void) {
+  //Pulso de 10us
+  digitalWrite(TRIGGER, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIGGER, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIGGER, LOW);
+  //Lê tempo atual
+  previousMicros = micros();
+  //Aguarda borda de subida ou timeout
+  while (!digitalRead(ECHO) && (micros() - previousMicros) <= TIMEOUT_SENSOR); // wait for the echo pin HIGH or timeout
+  //Atualiza o tempo atual
+  previousMicros = micros();
+  //Aguarda borda de descida ou timeout
+  while (digitalRead(ECHO)  && (micros() - previousMicros) <= TIMEOUT_SENSOR); // wait for the echo pin LOW or timeout
+  //Calcula a diferença de tempos
 
+  return micros() - previousMicros; // duration
 }
