@@ -17,6 +17,8 @@ width = 600
 image = np.zeros((height, width, 3), np.uint8)
 
 
+
+
 #Circle configuration
 center_coordinates = (300,600)
 radius_max = 260
@@ -47,6 +49,8 @@ y_120 = 0
 
 fontScale = 0.3
 font = cv2.FONT_HERSHEY_SIMPLEX
+
+
 
 def drawLines(image):
     color_angle = (255, 255, 0)
@@ -149,6 +153,11 @@ def drawAlphaEffect():
 
 def drawTexts(image):
 
+    global dist_1
+    global dist_2
+    global dist_3
+    global dist_4
+
     center_text = (300 - radius_1 + 10, 595)
     image = cv2.putText(image, str(dist_1) + "cm", center_text, font, fontScale, (0, 255, 255), 1, cv2.LINE_AA)
 
@@ -162,9 +171,27 @@ def drawTexts(image):
     image = cv2.putText(image, str(dist_4) + "cm", center_text, font, fontScale, (0, 255, 255), 1, cv2.LINE_AA)
 
 
+def on_change(value):
+    global image
+    global dist_max
+    global dist_1
+    global dist_2
+    global dist_3
+    global dist_4
+    dist_max = float(value)
+    dist_1 = dist_max / 4
+    dist_2 = dist_max * 2 / 4
+    dist_3 = dist_max * 3 / 4
+    dist_4 = dist_max
+    image = np.zeros((height, width, 3), np.uint8)
+
+windowname = "Single Channel Window"
+cv2.imshow(windowname, image)
+cv2.createTrackbar('Dist. max.',windowname , 20, 300, on_change)
+
 while(SerialPortOK == 0):
     try:
-        ser = serial.Serial(port='COM7', baudrate=115200)
+        ser = serial.Serial(port='COM5', baudrate=115200)
         SerialPortOK = 1
         print("Foi")
 
@@ -219,7 +246,7 @@ while 1:
             center = (300 - x,600 - y)
             image = cv2.circle(image, center, 5, (0,0,255), 5)
 
-        cv2.imshow('Single Channel Window', image)
+        cv2.imshow(windowname, image)
 
 
     if cv2.waitKey(1) == ord('q'):
