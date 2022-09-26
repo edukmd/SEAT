@@ -12,7 +12,7 @@
 
 //TIMER DEFINES
 #define TIMER_CONTROL   5  //ms
-#define TIMER_CHECK_ANGLE TIMER_CONTROL * 5  //ms
+#define TIMER_CHECK_ANGLE TIMER_CONTROL * 3  //ms
 
 #define HORARIO               1
 #define ANTI_HORARIO          0

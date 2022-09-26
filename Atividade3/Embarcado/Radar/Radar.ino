@@ -31,7 +31,7 @@ void setup() {
 
   checkDistanceState = SEND_TRIGGER;
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   stepsToReverseDirection = TOTAL_STEPS;
 
@@ -59,9 +59,9 @@ void loop() {
           actualAngle -= ANGLE_PER_STEP * 2;
         }
 
-        if(actualAngle < 0){
+        if (actualAngle < 0) {
           actualAngle = 0;
-        }else if(actualAngle > 180){
+        } else if (actualAngle > 180) {
           actualAngle = 180;
         }
 
@@ -85,6 +85,10 @@ void loop() {
         StateMachine = CHECK_DISTANCE;
 
         flagCheckAngle = TIMER_CHECK_ANGLE;
+
+        Serial.print(actualAngle);
+        Serial.print(',');
+        Serial.println(dist_eq1);
       }
 
       break;
@@ -100,11 +104,11 @@ void loop() {
 
     case SEND_DATA:
 
-    Serial.print(actualAngle);
-    Serial.print(',');
-    Serial.println(dist_eq1);
+      //Serial.print(actualAngle);
+      //Serial.print(',');
+      //Serial.println(dist_eq1);
 
-    StateMachine = ROTATE_MOTOR;
+      StateMachine = ROTATE_MOTOR;
       break;
   }
 
