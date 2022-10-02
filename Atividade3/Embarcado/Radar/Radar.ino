@@ -98,7 +98,7 @@ void loop() {
       echoTime = sensorTime();
       dist_eq1 = 0.0177 * echoTime - 0.6945;
 
-      StateMachine = SEND_DATA;
+      StateMachine = ROTATE_MOTOR;
 
       break;
 
