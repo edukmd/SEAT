@@ -9,18 +9,45 @@ void setup() {
   pinMode(CHANNEL_A, INPUT);
   pinMode(CHANNEL_B, INPUT);
   pinMode(CHANNEL_C, INPUT_PULLUP);
+  pinMode(GREEN_LED,OUTPUT);
   pinMode(MOTOR_PWM, OUTPUT);
+  
 
-  attachInterrupt(digitalPinToInterrupt(CHANNEL_A), ChannelA_irq, RISING);
-  //attachInterrupt(digitalPinToInterrupt(CHANNEL_B), ChannelB_irq, RISING);
+  attachInterrupt(digitalPinToInterrupt(CHANNEL_A), Channel_irq, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(CHANNEL_B), Channel_irq, CHANGE);
+
+  digitalWrite(GREEN_LED,LOW);
 
   Motor.attach(MOTOR_PWM);
-  Serial.begin(9600);
-  Motor.write(CLOSED);
+  Serial.begin(115200);
+  Motor.write(CLOSE);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  if (passwordPassed) {
+    doorValue = analogRead(DOOR_CHECK);
+
+    if (doorValue > 500 && !checkDoorOpen) {
+      checkDoorOpen = 1;
+    } else if (doorValue < 500  && checkDoorOpen) {
+      if (timeToClose) {
+        timeToClose--;
+      } else {
+        timeToClose = DEBOUNCE_TO_CLOSE;
+        checkDoorOpen = 0;
+        Motor.write(CLOSE);
+        passwordPassed = 0;
+        digitalWrite(GREEN_LED,LOW);
+      }
+
+    }
+  }
+
+
+
+  //Serial.println(doorValue);
 
   checkRotation();
 
@@ -31,10 +58,13 @@ void loop() {
     if (passwordPos == 4) {
       if (checkPassword()) {
         Serial.println("foi");
+        passwordPassed = 1;
         Motor.write(OPEN);
         password[0] = password[1] = password[2] = password[3] = 0;
         passwordPos = 0;
+        digitalWrite(GREEN_LED,HIGH);
       } else {
+        passwordPassed = 0;
         Serial.println("Não Foi");
         password[0] = password[1] = password[2] = password[3] = 0;
         passwordPos = 0;
@@ -45,35 +75,54 @@ void loop() {
 
 }
 
-void ChannelA_irq() {
-
+void Channel_irq() {
+  lastCHANNEL_A = actualCHANNEL_A;
+  lastCHANNEL_B = actualCHANNEL_B;
   actualCHANNEL_A = digitalRead(CHANNEL_A);
-
-  if (!flagIRQ_B && !flagIRQ_A && !timeToCheck) {
-    actualDirection = CW;
-    flagToCheck = 1;
-    flagIRQ_A = 1;
-
-  }
-
-  
-
-
-
-}
-
-void ChannelB_irq() {
-
   actualCHANNEL_B = digitalRead(CHANNEL_B);
 
-  if (!flagIRQ_A && !flagIRQ_B && !timeToCheck) {
-    actualDirection = CCW;
-    flagToCheck = 1;
-    flagIRQ_B = 1;
+  if (actualCHANNEL_A != lastCHANNEL_A) {
+
+    if (!actualCHANNEL_A) {
+
+      if (!lastCHANNEL_B && !actualCHANNEL_B) {
+        actualDirection = CW;
+      } else if (lastCHANNEL_B && actualCHANNEL_B) {
+        actualDirection = CCW;
+      }
+
+
+    } else if (actualCHANNEL_A) {
+      if (lastCHANNEL_B && actualCHANNEL_B) {
+        actualDirection = CW;
+      } else if (!lastCHANNEL_B && !actualCHANNEL_B) {
+        actualDirection = CCW;
+      }
+    }
+
+  } else if (actualCHANNEL_B != lastCHANNEL_B) {
+
+    if (!actualCHANNEL_B) {
+      if (lastCHANNEL_A && actualCHANNEL_A) {
+        actualDirection = CW;
+      } else if (!lastCHANNEL_A && !actualCHANNEL_A) {
+        actualDirection = CCW;
+      }
+
+    } else {
+      if (!lastCHANNEL_A && !actualCHANNEL_A) {
+        actualDirection = CW;
+      } else if (lastCHANNEL_A && actualCHANNEL_A) {
+        actualDirection = CCW;
+      }
+    }
+
 
   }
 
-  
+  flagToCheck++;
+  timeToCheck = CHECK_ROTATION_TICKS;
+
 }
 
 unsigned char checkChannelC(void) {
@@ -99,36 +148,21 @@ unsigned char checkChannelC(void) {
 }
 
 void checkRotation(void) {
-  if (flagIRQ_A) {
-    flagIRQ_A = 0;
-    //Serial.print("Canal A: ");
-    //Serial.println(actualCHANNEL_A);
-    timeToCheck = CHECK_ROTATION_TICKS;
-  }
 
-  if (flagIRQ_B) {
-    flagIRQ_B = 0;
-    //Serial.print("Canal B: ");
-    //Serial.println(actualCHANNEL_B);
-    timeToCheck = CHECK_ROTATION_TICKS;
-  }
-
-  if (!timeToCheck) {
-    if (flagToCheck) {
-      Serial.println("----------");
-
+  if (flagToCheck > 3) {
+    if (timeToCheck) {
+      timeToCheck--;
+    } else {
+      flagToCheck = 0;
       if (actualDirection == CW) {
         totalRotation++;
-      } else if (actualDirection == CCW) {
+      } else {
         totalRotation--;
       }
-      flagToCheck = 0;
-      flagIRQ_A = flagIRQ_B = 0;
-      Serial.println(totalRotation);
-    }
 
-  } else {
-    timeToCheck--;
+      Serial.println(totalRotation);
+
+    }
   }
 }
 

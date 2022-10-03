@@ -5,14 +5,19 @@
 #define CHANNEL_A       18
 #define CHANNEL_B       19
 #define CHANNEL_C       22
+#define GREEN_LED       24
 #define MOTOR_PWM       5
 
-#define OPEN            90
-#define CLOSED          0
+
+#define DOOR_CHECK      A0
+
+#define OPEN            0
+#define CLOSE          90
 
 
 #define DEBOUNCE_TICKS        6000
-#define CHECK_ROTATION_TICKS  1000
+#define CHECK_ROTATION_TICKS  2000
+#define DEBOUNCE_TO_CLOSE     10000
 
 typedef enum _direction{
   CW,
@@ -40,6 +45,9 @@ int pressedFlag = 0;
 int flagToCheck = 0;
 
 int timeToCheck = CHECK_ROTATION_TICKS;
+int doorValue = 0;
+int checkDoorOpen = 0;
+int timeToClose = 0;
 
 
 
@@ -48,6 +56,7 @@ int timeToCheck = CHECK_ROTATION_TICKS;
 int password[4] = {0,0,0,0};
 int passwordDefault[4] = {2,-5,3,8};
 unsigned char passwordPos = 0;
+unsigned char passwordPassed = 0;
 
 
 //Functions
