@@ -2,11 +2,12 @@
 
 #define __GLOBAL_H__
 
-#define CHANNEL_A       18
-#define CHANNEL_B       19
+#define CHANNEL_A       19
+#define CHANNEL_B       18
 #define CHANNEL_C       22
 #define GREEN_LED       24
 #define MOTOR_PWM       5
+#define melodyPin       3
 
 
 #define DOOR_CHECK      A0
@@ -16,8 +17,9 @@
 
 
 #define DEBOUNCE_TICKS        6000
-#define CHECK_ROTATION_TICKS  2000
-#define DEBOUNCE_TO_CLOSE     10000
+#define CHECK_ROTATION_TICKS  1500
+#define DEBOUNCE_TO_CLOSE     5000
+#define DEBOUNCE_TO_OPEN      DEBOUNCE_TO_CLOSE
 
 typedef enum _direction{
   CW,
@@ -47,7 +49,8 @@ int flagToCheck = 0;
 int timeToCheck = CHECK_ROTATION_TICKS;
 int doorValue = 0;
 int checkDoorOpen = 0;
-int timeToClose = 0;
+int timeToOpen = DEBOUNCE_TO_OPEN;
+int timeToClose = DEBOUNCE_TO_CLOSE;
 
 
 
